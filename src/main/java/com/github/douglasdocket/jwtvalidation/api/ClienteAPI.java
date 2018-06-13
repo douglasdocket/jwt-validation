@@ -1,6 +1,9 @@
 package com.github.douglasdocket.jwtvalidation.api;
 
 import com.github.douglasdocket.jwtvalidation.output.ClienteOutput;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +19,10 @@ public class ClienteAPI {
     };
 
     @GetMapping
-    public ClienteOutput[] listarClientes() {
+    public ClienteOutput[] listarClientes(Authentication authentication) {
+
+        System.out.println("authentication = [" + authentication + "]");
+
         return clienteOutputs;
     }
 
