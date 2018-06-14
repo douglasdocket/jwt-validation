@@ -1,6 +1,7 @@
 package com.github.douglasdocket.jwtvalidation.filter;
 
-import com.github.douglasdocket.jwtvalidation.service.UsuarioService;
+import com.github.douglasdocket.jwtvalidation.entity.ApplicationBot;
+import com.github.douglasdocket.jwtvalidation.service.BotService;
 import io.jsonwebtoken.Jwts;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,15 +9,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.util.StringUtils;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 
 import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.HEADER_STRING;
 import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.SECRET;
@@ -25,10 +26,12 @@ import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     private UserDetailsService userDetailsService;
+    private BotService botService;
 
-    public JWTAuthorizationFilter(AuthenticationManager authManager, UserDetailsService userDetailsService) {
+    public JWTAuthorizationFilter(AuthenticationManager authManager, UserDetailsService userDetailsService, BotService botService) {
         super(authManager);
         this.userDetailsService = userDetailsService;
+        this.botService = botService;
     }
 
     @Override
@@ -59,21 +62,37 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
             token = token.replace("web-", "");
 
             // parse the token.
-            String user = Jwts.parser()
+            String subject = Jwts.parser()
                     .setSigningKey(SECRET.getBytes())
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
 
-            if (user != null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(user);
+            if (subject != null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
 
-                return new UsernamePasswordAuthenticationToken(user, null, userDetails.getAuthorities());
+                return new UsernamePasswordAuthenticationToken(subject, null, userDetails.getAuthorities());
             }
 
         }
 
-        System.out.println("JWTAuthorizationFilter.getAuthentication");
+        if (token.startsWith("bot-")) {
+            token = token.replace("bot-", "");
+
+            // parse the token.
+            String subject = Jwts.parser()
+                    .setSigningKey(SECRET.getBytes())
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+
+            if (subject != null) {
+                ApplicationBot applicationBot = botService.loadBotById(subject);
+
+                return new PreAuthenticatedAuthenticationToken(applicationBot.getId(), null, Collections.emptyList());
+            }
+
+        }
 
         return null;
     }

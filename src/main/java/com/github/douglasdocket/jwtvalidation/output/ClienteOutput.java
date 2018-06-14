@@ -23,4 +23,14 @@ public class ClienteOutput {
     public String getCnpj() {
         return cnpj;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ClienteOutput{");
+        sb.append("nomeFantasia='").append(nomeFantasia).append('\'');
+        sb.append(", razaoSocial='").append(razaoSocial).append('\'');
+        sb.append(", cnpj='").append(cnpj).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

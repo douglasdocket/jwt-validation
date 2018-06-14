@@ -10,21 +10,21 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
 
-public class TokenAuthenticationService {
+import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.EXPIRATION_TIME;
+import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.HEADER_STRING;
+import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.SECRET;
+import static com.github.douglasdocket.jwtvalidation.hardcode.SecurityConstants.TOKEN_PREFIX;
 
-    private static final long EXPIRATIONTIME = 864000000;
-    private static final String SECRET = "SecretKeyToGenJWTs";
-    private static final String TOKEN_PREFIX = "Bearer web-";
-    private static final String HEADER_STRING = "Authorization";
+public class TokenAuthenticationService {
 
     public static void addAuthentication(HttpServletResponse res, String username) {
         String JWT = Jwts.builder()
                 .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATIONTIME))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.HS512, SECRET.getBytes())
                 .compact();
 
-        String token = TOKEN_PREFIX + JWT;
+        String token = TOKEN_PREFIX + "web-" + JWT;
         res.addHeader(HEADER_STRING, token);
     }
 
